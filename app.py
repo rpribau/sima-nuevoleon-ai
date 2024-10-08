@@ -6,7 +6,7 @@ import pages as pg
 
 st.set_page_config(initial_sidebar_state="collapsed", layout="wide")
 
-pages = ["Install", "User Guide", "API", "Examples", "Community", "GitHub"]
+pages = ["Pronosticos", "Cambio Climatico", "Medio Ambiente", "Examples", "Community", "GitHub"]
 parent_dir = os.path.dirname(os.path.abspath(__file__))
 logo_path = os.path.join(parent_dir, "logoNL.svg")
 urls = {"GitHub": "https://github.com/gabrieltempass/streamlit-navigation-bar"}
@@ -16,17 +16,17 @@ styles = {
         "justify-content": "left",
     },
     "img": {
-        "padding-right": "14px",
+        "padding-right": "24px",
     },
     "span": {
         "color": "white",
-        "padding": "14px",
+        "padding": "20px",
     },
     "active": {
         "background-color": "white",
         "color": "var(--text-color)",
         "font-weight": "normal",
-        "padding": "14px",
+        "padding": "24px",
     }
 }
 options = {
@@ -44,9 +44,9 @@ page = st_navbar(
 
 functions = {
     "Home": pg.show_home,
-    "Install": pg.show_install,
-    "User Guide": pg.show_user_guide,
-    "API": pg.show_api,
+    "Pronosticos": pg.show_install,
+    "Cambio Climatico": pg.show_user_guide,
+    "Medio Ambiente": pg.show_api,
     "Examples": pg.show_examples,
     "Community": pg.show_community,
 }

@@ -3,13 +3,24 @@ from streamlit_folium import st_folium
 import streamlit as st
 
 def show_home():
-    st.header("Home")
-    
+    st.header("Reporte de Calidad del Aire en Monterrey")
+
+    # Add the Rerun button at the top
+    col1, col2 = st.columns([9, 1])  # Allocate more space for the map, less for the button
+    with col2:
+        if st.button("Rerun App"):  # Place button at the right
+            st.session_state['rerun_triggered'] = True
+
+    # Ensure rerun only happens once
+    if 'rerun_triggered' in st.session_state and st.session_state['rerun_triggered']:
+        st.session_state['rerun_triggered'] = False  # Reset after rerun
+        st.experimental_rerun()  # Rerun the app once
+
     # Starting location for the map (Monterrey, Nuevo Leon)
     initial_coords = [25.6866, -100.3161]  # Monterrey Coordinates
-    
+
     # Create a Folium map centered at the initial coordinates
-    folium_map = folium.Map(location=initial_coords, zoom_start=12)
+    folium_map = folium.Map(location=initial_coords, zoom_start=10)
 
     # List of coordinates to add markers to
     coordinates = [
@@ -26,8 +37,6 @@ def show_home():
         {"lat": 25.600874, "lon": -99.995298, "name": "Sureste3"},
         {"lat": 25.729787, "lon": -100.310028, "name": "Norte2"},
         {"lat": 25.575383, "lon": -100.249371, "name": "Sur"},
-
-        # Add other coordinates as necessary...
     ]
 
     # Add markers to the map
@@ -38,4 +47,5 @@ def show_home():
         ).add_to(folium_map)
 
     # Display the map in Streamlit
-    st_folium(folium_map, width=700, height=500)
+    st_folium(folium_map, width=900, height=500)
+

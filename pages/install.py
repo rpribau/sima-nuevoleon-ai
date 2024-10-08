@@ -2,7 +2,7 @@ import streamlit as st
 
 
 def show_install():
-    st.header("Install")
+    st.header("Pronosticos")
     st.write(
         """
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris id diam 
