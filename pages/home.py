@@ -1,20 +1,10 @@
 import folium
 from streamlit_folium import st_folium
 import streamlit as st
+import pandas as pd
 
 def show_home():
-    st.header("Reporte de Calidad del Aire en Monterrey")
-
-    # Add the Rerun button at the top
-    col1, col2 = st.columns([9, 1])  # Allocate more space for the map, less for the button
-    with col2:
-        if st.button("Rerun App"):  # Place button at the right
-            st.session_state['rerun_triggered'] = True
-
-    # Ensure rerun only happens once
-    if 'rerun_triggered' in st.session_state and st.session_state['rerun_triggered']:
-        st.session_state['rerun_triggered'] = False  # Reset after rerun
-        st.experimental_rerun()  # Rerun the app once
+    st.header("Reporte de Calidad del Aire en Monterrey.")
 
     # Starting location for the map (Monterrey, Nuevo Leon)
     initial_coords = [25.6866, -100.3161]  # Monterrey Coordinates
@@ -39,13 +29,50 @@ def show_home():
         {"lat": 25.575383, "lon": -100.249371, "name": "Sur"},
     ]
 
-    # Add markers to the map
+    # Metrics for each station (sample data)
+    station_metrics = {
+        "Centro": {'CO': 1.2, 'NO': 0.5, 'NO2': 0.7, 'NOX': 1.1, 'O3': 0.9, 'PM10': 45, 'PM2.5': 30, 'PRS': 1015, 'RAINF': 0.0, 'RH': 60, 'SO2': 0.02},
+        "Sureste": {'CO': 1.1, 'NO': 0.4, 'NO2': 0.6, 'NOX': 1.0, 'O3': 1.0, 'PM10': 40, 'PM2.5': 25, 'PRS': 1013, 'RAINF': 0.1, 'RH': 55, 'SO2': 0.03},
+        "Noreste": {'CO': 1.0, 'NO': 0.6, 'NO2': 0.8, 'NOX': 1.2, 'O3': 0.8, 'PM10': 50, 'PM2.5': 35, 'PRS': 1016, 'RAINF': 0.0, 'RH': 58, 'SO2': 0.01},
+        # Add other stations and their metrics here
+    }
+
+    # Create two columns: one for the map and one for the metrics
+        # Create two columns: one for the map and one for the metrics
+    map_col, metrics_col = st.columns([1, 1])
+
+    # Add markers to the map before displaying it
     for loc in coordinates:
         folium.Marker(
             location=[loc["lat"], loc["lon"]],
             popup=loc["name"],
         ).add_to(folium_map)
 
-    # Display the map in Streamlit
-    st_folium(folium_map, width=900, height=500)
+    # Display the map in the left column
+    with map_col:
+        st_folium(folium_map, width=800, height=500)
 
+
+    # Add a selection box for stations and display the metrics in the right column
+    with metrics_col:
+        selected_station = st.selectbox("Selecciona una estación", [loc["name"] for loc in coordinates])
+
+        if selected_station in station_metrics:
+            st.write(f"**Métricas para la estación {selected_station}:**")
+            metrics = station_metrics[selected_station]
+
+            # Create a DataFrame from the metrics
+            # Create a DataFrame from the metrics without showing the index
+            # Create a DataFrame from the metrics without showing the index
+            df = pd.DataFrame(list(metrics.items()), columns=['Métrica', 'Valor']).reset_index(drop=True)
+            # Display the dataframe without the index
+            st.dataframe(df, height=370, width=800, hide_index=True)
+    
+    st.header("Pronostico de la semana.")
+
+
+
+
+# Run the app
+if __name__ == "__main__":
+    show_home()

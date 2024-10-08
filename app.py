@@ -6,10 +6,10 @@ import pages as pg
 
 st.set_page_config(initial_sidebar_state="collapsed", layout="wide")
 
-pages = ["Pronosticos", "Cambio Climatico", "Medio Ambiente", "Examples", "Community", "GitHub"]
+pages = ["Pronosticos", "Cambio Climatico", "Medio Ambiente", "GitHub"]
 parent_dir = os.path.dirname(os.path.abspath(__file__))
 logo_path = os.path.join(parent_dir, "logoNL.svg")
-urls = {"GitHub": "https://github.com/gabrieltempass/streamlit-navigation-bar"}
+urls = {"GitHub": "https://github.com/alternativeprogrammer/simaNL-AI"}
 styles = {
     "nav": {
         "background-color": "#236241",
@@ -47,8 +47,6 @@ functions = {
     "Pronosticos": pg.show_install,
     "Cambio Climatico": pg.show_user_guide,
     "Medio Ambiente": pg.show_api,
-    "Examples": pg.show_examples,
-    "Community": pg.show_community,
 }
 go_to = functions.get(page)
 if go_to:
