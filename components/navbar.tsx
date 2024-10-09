@@ -32,9 +32,9 @@ export default function Navbar() {
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
-                <Link href="/pigeca" legacyBehavior passHref>
+                <Link href="/pronosticos" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    PIGECA
+                    Pronosticos
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
@@ -104,8 +104,8 @@ export default function Navbar() {
             </MobileLink>
             <div className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
               <div className="flex flex-col space-y-3">
-                <MobileLink href="/pigeca" onOpenChange={setIsOpen}>
-                  PIGECA
+                <MobileLink href="/pronosticos" onOpenChange={setIsOpen}>
+                  Pronosticos
                 </MobileLink>
                 <div className="flex flex-col space-y-2">
                   <MobileLink href="/calidad-del-aire" onOpenChange={setIsOpen}>

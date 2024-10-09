@@ -1,78 +1,111 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css'
-import L from 'leaflet'
+import { useState } from 'react';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import { LatLngExpression } from 'leaflet';
+import 'leaflet/dist/leaflet.css';  // Import Leaflet's CSS
+import { Loader } from 'lucide-react';  // Spinner for loading state
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';  // Import Card components from Shadcn
 
-// Fix for default marker icon
-import icon from 'leaflet/dist/images/marker-icon.png'
-import iconShadow from 'leaflet/dist/images/marker-shadow.png'
+// Import the default marker icon
+import L from 'leaflet';
 
-let DefaultIcon = L.icon({
-  iconUrl: icon.src,
-  shadowUrl: iconShadow.src,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-})
-
-L.Marker.prototype.options.icon = DefaultIcon
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+});
 
 const coordinates = [
-  {"lat": 25.67602, "lon": -100.335847, "name": "Centro"},
-  {"lat": 25.66827, "lon": -100.249580, "name": "Sureste"},
-  {"lat": 25.74543, "lon": -100.255020, "name": "Noreste"},
-  {"lat": 25.75712, "lon": -100.365974, "name": "Noroeste"},
-  {"lat": 25.675674, "lon": -100.465018, "name": "Suroeste"},
-  {"lat": 25.783456, "lon": -100.585874, "name": "Noroeste2"},
-  {"lat": 25.80194, "lon": -100.343056, "name": "Norte"},
-  {"lat": 25.77722, "lon": -100.188055, "name": "Noreste2"},
-  {"lat": 25.64611, "lon": -100.095555, "name": "Sureste2"},
-  {"lat": 25.66528, "lon": -100.412778, "name": "Suroeste2"},
-  {"lat": 25.600874, "lon": -99.995298, "name": "Sureste3"},
-  {"lat": 25.729787, "lon": -100.310028, "name": "Norte2"},
-  {"lat": 25.575383, "lon": -100.249371, "name": "Sur"},
-]
+  { lat: 25.67602, lon: -100.335847, name: "Centro", dataUrl: 'http://aire.nl.gob.mx:81/SIMA2017reportes/ReporteDiariosimaIcars.php?estacion1=CENTRO' },
+  { lat: 25.66827, lon: -100.249580, name: "Sureste", dataUrl: 'http://aire.nl.gob.mx:81/SIMA2017reportes/ReporteDiariosimaIcars.php?estacion1=SURESTE' },
+  { lat: 25.74543, lon: -100.255020, name: "Noreste", dataUrl: 'http://aire.nl.gob.mx:81/SIMA2017reportes/ReporteDiariosimaIcars.php?estacion1=NORESTE' },
+  { lat: 25.75712, lon: -100.365974, name: "Noroeste", dataUrl: 'http://aire.nl.gob.mx:81/SIMA2017reportes/ReporteDiariosimaIcars.php?estacion1=NOROESTE' },
+  { lat: 25.675674, lon: -100.465018, name: "Suroeste", dataUrl: 'http://aire.nl.gob.mx:81/SIMA2017reportes/ReporteDiariosimaIcars.php?estacion1=SUROESTE' },
+  { lat: 25.783456, lon: -100.585874, name: "Noroeste2", dataUrl: 'http://aire.nl.gob.mx:81/SIMA2017reportes/ReporteDiariosimaIcars.php?estacion1=GARCIA' },
+  { lat: 25.80194, lon: -100.343056, name: "Norte", dataUrl: 'http://aire.nl.gob.mx:81/SIMA2017reportes/ReporteDiariosimaIcars.php?estacion1=NORTE' },
+  { lat: 25.77722, lon: -100.188055, name: "Noreste2", dataUrl: 'http://aire.nl.gob.mx:81/SIMA2017reportes/ReporteDiariosimaIcars.php?estacion1=NORESTE2' },
+  { lat: 25.64611, lon: -100.095555, name: "Sureste2", dataUrl: 'http://aire.nl.gob.mx:81/SIMA2017reportes/ReporteDiariosimaIcars.php?estacion1=SURESTE2' },
+  { lat: 25.66528, lon: -100.412778, name: "Suroeste2", dataUrl: 'http://aire.nl.gob.mx:81/SIMA2017reportes/ReporteDiariosimaIcars.php?estacion1=[SAN%20Pedro]' },
+  { lat: 25.600874, lon: -99.995298, name: "Sureste3", dataUrl: 'http://aire.nl.gob.mx:81/SIMA2017reportes/ReporteDiariosimaIcars.php?estacion1=SURESTE3' },
+  { lat: 25.729787, lon: -100.310028, name: "Norte2", dataUrl: 'http://aire.nl.gob.mx:81/SIMA2017reportes/ReporteDiariosimaIcars.php?estacion1=NORTE2' },
+  { lat: 25.575383, lon: -100.249371, name: "Sur", dataUrl: 'http://aire.nl.gob.mx:81/SIMA2017reportes/ReporteDiariosimaIcars.php?estacion1=SUR' },
+  // (futuras estaciones aqui)
+];
 
-export default function InteractiveMap() {
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
+export default function StationsPage() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = async (dataUrl: string) => {
+    setLoading(true);
+    setData(null);  // Clear old data
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/stations?dataUrl=${encodeURIComponent(dataUrl)}`);
+      const result = await res.json();
+
+      if (res.ok) {
+        setData(result);
+      } else {
+        setError(result.error || "Failed to fetch data");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="flex h-screen">
-      <div className="w-1/2 p-4 bg-gray-100">
-        <h2 className="text-2xl font-bold mb-4">Calidad del aire en el Area Metropolitana de Monterrey</h2>
-        <h2 className="text-lg font-bold mb-2">Ultima actualizacion: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).replace(/:\d{2}/, ':00')}</h2>
-        
-        {selectedLocation ? (
-          <p className="text-lg">{selectedLocation}</p>
-        ) : (
-          <p className="text-lg text-gray-500">Haz click en uno de los marcadores en el mapa.</p>
+    <div className="flex flex-col md:flex-row">
+      {/* Left Side: Cards */}
+      <div className="w-full md:w-1/2 p-4">
+        {loading && (
+          <div className="flex justify-center items-center my-4">
+            <Loader className="animate-spin" />
+          </div>
+        )}
+
+        {error && <div className="text-red-500">{error}</div>}
+
+        {data && !loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.map((entry: string[], index: number) => (
+              <Card key={index}>
+                <CardHeader>
+                  <CardTitle>{entry[0]}</CardTitle>  {/* Pollutant Name */}
+                </CardHeader>
+                <CardContent>
+                  <p>Concentration: {entry[1]}</p>  {/* Concentration */}
+                  <p>Air Quality: {entry[2]}</p>   {/* Air Quality */}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
-      <div className="w-1/2 ml-auto p-4 bg-gray-100 ">
-        <MapContainer
-          center={[25.6866, -100.3161]}
-          zoom={10}
-          style={{ height: '70%', width: '100%' }}
-          className='bg-gray-100 rounded-lg'
-        >
+
+      {/* Right Side: Map */}
+      <div className="w-full md:w-1/2 p-4">
+        <MapContainer center={[25.67602, -100.335847] as LatLngExpression} zoom={10} style={{ height: "600px", width: "100%", borderRadius: 10}}>
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
-          {coordinates.map((coord, index) => (
-            <Marker
-              key={index}
-              position={[coord.lat, coord.lon]}
+          {coordinates.map((station, index) => (
+            <Marker 
+              key={index} 
+              position={[station.lat, station.lon] as LatLngExpression} 
               eventHandlers={{
-                click: () => setSelectedLocation(coord.name),
+                click: () => fetchData(station.dataUrl),
               }}
-            >
-            </Marker>
+            />
           ))}
         </MapContainer>
       </div>
     </div>
-
-  )
+  );
 }
