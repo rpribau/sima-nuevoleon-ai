@@ -1,0 +1,37 @@
+[
+  {
+    "parametro": "Bióxido de azufre (SO2)",
+    "valor": "4.271",
+    "descriptor": "Bueno"
+  },
+  {
+    "parametro": "Bióxido de nitrógeno (NO2)",
+    "valor": "5",
+    "descriptor": "Bueno"
+  },
+  {
+    "parametro": "Monóxido de carbono (CO)",
+    "valor": "1.106",
+    "descriptor": "Bueno"
+  },
+  {
+    "parametro": "Ozono (O3)",
+    "valor": "13",
+    "descriptor": "Bueno"
+  },
+  {
+    "parametro": "Ozono (O3) promedio 8 hrs",
+    "valor": "38.125",
+    "descriptor": "Bueno"
+  },
+  {
+    "parametro": "Partículas menores a 10 micras (PM10)",
+    "valor": "87.236",
+    "descriptor": "Malo"
+  },
+  {
+    "parametro": "Partículas menores a 2.5 micras (PM2.5)",
+    "valor": "26.051",
+    "descriptor": "Aceptable"
+  }
+]
