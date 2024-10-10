@@ -67,7 +67,7 @@ export default function Navbar() {
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link href="/medio-ambiente-sig" legacyBehavior passHref>
+                <Link href="/sig" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Medio Ambiente - SIG
                   </NavigationMenuLink>
@@ -126,7 +126,7 @@ export default function Navbar() {
                     Pronóstico
                   </MobileLink>
                 </div>
-                <MobileLink href="/medio-ambiente-sig" onOpenChange={setIsOpen}>
+                <MobileLink href="/sig" onOpenChange={setIsOpen}>
                   Medio Ambiente - SIG
                 </MobileLink>
                 <MobileLink href="/cambio-climatico" onOpenChange={setIsOpen}>

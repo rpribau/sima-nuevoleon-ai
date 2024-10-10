@@ -14,6 +14,15 @@ export async function GET(request: Request) {
 
   try {
     const filePath = path.join(dataDirectory, `${stationName.toLowerCase()}.json`);
+    
+    // Check if the file exists
+    try {
+      await fs.access(filePath);
+    } catch (error) {
+      console.error(`File not found: ${filePath}`);
+      return NextResponse.json({ error: `Data not found for station: ${stationName}` }, { status: 404 });
+    }
+
     const fileContents = await fs.readFile(filePath, 'utf-8');
     const stationData = JSON.parse(fileContents);
     

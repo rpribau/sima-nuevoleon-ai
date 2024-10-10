@@ -10,6 +10,18 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import L from 'leaflet';
 
 const getBackgroundColor = (airQuality: string | undefined) => {
+  if (!airQuality) return '#808080'; // Gray for unknown
+  switch (airQuality.toLowerCase()) {
+    case 'bueno': return '#00FF00'; // Green
+    case 'aceptable': return '#FFFF00'; // Yellow
+    case 'malo': return '#FFA500'; // Orange
+    case 'muy mala': return '#FF0000'; // Red
+    case 'extremadamente mala': return '#800080'; // Purple
+    default: return '#FFFFFF'; // White
+  }
+};
+
+const getTailwindBackgroundColor = (airQuality: string | undefined) => {
   if (!airQuality) return 'bg-gray-100'; // Default for disconnected or missing data
   switch (airQuality.toLowerCase()) {
     case 'bueno': return 'bg-green-100';
@@ -44,43 +56,76 @@ const coordinates = [
   { lat: 25.600874, lon: -99.995298, name: "Sureste3" },
   { lat: 25.729787, lon: -100.310028, name: "Norte2" },
   { lat: 25.575383, lon: -100.249371, name: "Sur" },
-  //... other coordinates
 ];
 
 export default function StationsPage() {
   const [stationsData, setStationsData] = useState<{ [key: string]: any }>({});
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [stationLoading, setStationLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedStation, setSelectedStation] = useState<string | null>(null);
 
-  const fetchStationData = async (stationName: string) => {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    const fetchAllStationsData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const allData = await Promise.all(
+          coordinates.map(async (station) => {
+            try {
+              const res = await fetch(`http://localhost:4000/data/${station.name.toLowerCase()}`);
+              if (!res.ok) {
+                throw new Error(`Failed to fetch data for ${station.name}: ${res.statusText}`);
+              }
+              const data = await res.json();
+              return { [station.name]: data };
+            } catch (err) {
+              console.error(`Error fetching data for ${station.name}:`, err);
+              return { [station.name]: null };
+            }
+          })
+        );
+        const combinedData = Object.assign({}, ...allData);
+        setStationsData(combinedData);
+      } catch (err) {
+        setError("An error occurred while fetching station data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllStationsData();
+  }, []);
+
+  const handleStationClick = async (stationName: string) => {
+    setSelectedStation(stationName);
+    setStationLoading(true);
     try {
       const res = await fetch(`http://localhost:4000/data/${stationName.toLowerCase()}`);
-      const data = await res.json();
-      if (res.ok) {
-        setStationsData(prevData => ({
-          ...prevData,
-          [stationName]: data
-        }));
-        setSelectedStation(stationName);
-      } else {
-        setError(data.error || "Failed to fetch data");
+      if (!res.ok) {
+        throw new Error(`Failed to fetch data for ${stationName}: ${res.statusText}`);
       }
+      const data = await res.json();
+      setStationsData(prevData => ({
+        ...prevData,
+        [stationName]: data
+      }));
     } catch (err) {
-      setError("An unexpected error occurred");
+      console.error(`Error fetching data for ${stationName}:`, err);
+      setError(`Failed to load data for ${stationName}`);
     } finally {
-      setLoading(false);
+      setStationLoading(false);
     }
   };
 
-  const handleStationClick = (stationName: string) => {
-    if (!stationsData[stationName]) {
-      fetchStationData(stationName);
-    } else {
-      setSelectedStation(stationName);
-    }
+  const getWorstAirQuality = (stationData: any[] | null) => {
+    if (!stationData) return { descriptor: 'unknown' };
+    const hierarchy = ["bueno", "aceptable", "malo", "muy mala", "extremadamente mala"];
+    return stationData.reduce((worst, current) => {
+      const worstIndex = hierarchy.indexOf(worst.descriptor.toLowerCase());
+      const currentIndex = hierarchy.indexOf(current.descriptor.toLowerCase());
+      return currentIndex > worstIndex ? current : worst;
+    }, { descriptor: 'bueno' });
   };
 
   return (
@@ -94,29 +139,34 @@ export default function StationsPage() {
 
         {error && <div className="text-red-500">{error}</div>}
 
-        {!loading && selectedStation && stationsData[selectedStation] && (
+        {!loading && selectedStation && (
           <div>
             <h2 className="text-2xl font-bold mb-4">{selectedStation}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {stationsData[selectedStation] && Array.isArray(stationsData[selectedStation]) && stationsData[selectedStation].map((value, index) => (
-                <Card key={index} className={`${getBackgroundColor(value.descriptor)}`}>
-                  <CardHeader>
-                    <CardTitle>{value.parametro}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div>
-                      Valor: {value.valor} {/* Asegúrate de que aquí incluyas la medida */}
-                    </div>
-                    <div>
-                      Descriptor: {value.descriptor}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {stationLoading ? (
+              <div className="flex justify-center items-center my-4">
+                <Loader className="animate-spin" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {stationsData[selectedStation] && Array.isArray(stationsData[selectedStation]) && stationsData[selectedStation].map((value, index) => (
+                  <Card key={index} className={`${getTailwindBackgroundColor(value.descriptor)}`}>
+                    <CardHeader>
+                      <CardTitle>{value.parametro}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div>
+                        Valor: {value.valor}
+                      </div>
+                      <div>
+                        Descriptor: {value.descriptor}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         )}
-
       </div>
 
       <div className="w-full md:w-1/2 p-4">
@@ -125,16 +175,22 @@ export default function StationsPage() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
-          {coordinates.map((station, index) => (
-            <Marker
-              key={index}
-              position={[station.lat, station.lon] as LatLngExpression}
-              icon={createCustomIcon(getBackgroundColor(stationsData[station.name]?.worstAirQuality))}
-              eventHandlers={{
-                click: () => handleStationClick(station.name),
-              }}
-            />
-          ))}
+          {coordinates.map((station, index) => {
+            const stationData = stationsData[station.name];
+            const worstAirQuality = getWorstAirQuality(stationData);
+            const pinColor = getBackgroundColor(worstAirQuality.descriptor);
+
+            return (
+              <Marker
+                key={index}
+                position={[station.lat, station.lon] as LatLngExpression}
+                icon={createCustomIcon(pinColor)}
+                eventHandlers={{
+                  click: () => handleStationClick(station.name),
+                }}
+              />
+            );
+          })}
         </MapContainer>
       </div>
     </div>
