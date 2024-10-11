@@ -6,6 +6,7 @@ import { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Loader } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import Image from 'next/image';
 
 import L from 'leaflet';
 
@@ -58,12 +59,78 @@ const coordinates = [
   { lat: 25.575383, lon: -100.249371, name: "Sur" },
 ];
 
+const airQualityInfo = {
+  bueno: {
+    color: '#DCFCE7',
+    imeca: '0 - 50',
+    risks: 'Ninguno',
+    recommendations: [
+      'Puedes realizar actividades al aire libre',
+      'Puedes ejercitarte al aire libre',
+      'Sin riesgo para grupos sensibles'
+    ]
+  },
+  aceptable: {
+    color: '#FEF9C3',
+    imeca: '51 - 100',
+    risks: 'Posibles molestias en niños, adultos mayores y personas con enfermedades respiratorias o cardiovasculares.',
+    recommendations: [
+      'Puedes realizar actividades al aire libre',
+      'Puedes ejercitarte al aire libre',
+      'Personas extremadamente sensibles limitar actividades al aire libre'
+    ]
+  },
+  malo: {
+    color: '#FFEDD5',
+    imeca: '101 - 150',
+    risks: 'Posibles efectos adversos a la salud, en particular niños, adultos mayores y personas con enfermedades cardiovasculares o respiratorias.',
+    recommendations: [
+      'Limita las actividades al aire libre',
+      'Limita el tiempo para ejercitarte al aire libre',
+      'Grupos sensibles permanecer en interiores'
+    ]
+  },
+  'muy mala': {
+    color: '#FF0000',
+    imeca: '151 - 200',
+    risks: 'Efectos adversos a la salud de la población en general. Se agravan los síntomas en niños, adultos mayores y personas con enfermedades cardiovasculares o respiratorias.',
+    recommendations: [
+      'Evita las actividades al aire libre',
+      'Evita ejercitarte al aire libre',
+      'Mantén cerradas puertas y ventanas',
+      'Grupos sensibles permanecer en interiores',
+      'Acude al médico si presentas síntomas de enfermedades respiratorias o cardiovasculares',
+      'Limita el uso de vehículos automotores',
+      'Evita hacer fogatas y el uso de combustibles sólidos (carbón y leña)',
+      'Si eres fumador, limita el consumo del tabaco',
+      'Permanece atento a la información de la calidad del aire'
+    ]
+  },
+  'extremadamente mala': {
+    color: '#800080',
+    imeca: '201 - 500',
+    risks: 'Efectos graves a la salud de la población en general. Se pueden presentar complicaciones en niños, adultos mayores y personas con enfermedades cardiovasculares o respiratorias.',
+    recommendations: [
+      'Suspende tus actividades al aire libre',
+      'Suspende todo ejercicio al aire libre',
+      'Mantén cerradas puertas y ventanas',
+      'Grupos sensibles permanecer en interiores',
+      'Acude inmediatamente al médico, o solicita servicio de emergencia si presentas síntomas de enfermedades respiratorias o cardiovasculares',
+      'No uses vehículos automotores a menos que sea necesario',
+      'No hacer fogatas ni usar combustible sólido (carbón y leña)',
+      'No fumar',
+      'Permanecer atento a la información de la calidad del aire'
+    ]
+  }
+};
+
 export default function StationsPage() {
   const [stationsData, setStationsData] = useState<{ [key: string]: any }>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [stationLoading, setStationLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedStation, setSelectedStation] = useState<string | null>(null);
+  const [selectedStation, setSelectedStation] = useState<string | null>("Centro");
+  const [selectedAirQuality, setSelectedAirQuality] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAllStationsData = async () => {
@@ -87,6 +154,13 @@ export default function StationsPage() {
         );
         const combinedData = Object.assign({}, ...allData);
         setStationsData(combinedData);
+        
+        // Set initial data for Centro
+        const centroData = combinedData["Centro"];
+        if (centroData) {
+          const worstAirQuality = getWorstAirQuality(centroData);
+          setSelectedAirQuality(worstAirQuality.descriptor.toLowerCase());
+        }
       } catch (err) {
         setError("An error occurred while fetching station data");
       } finally {
@@ -110,6 +184,8 @@ export default function StationsPage() {
         ...prevData,
         [stationName]: data
       }));
+      const worstAirQuality = getWorstAirQuality(data);
+      setSelectedAirQuality(worstAirQuality.descriptor.toLowerCase());
     } catch (err) {
       console.error(`Error fetching data for ${stationName}:`, err);
       setError(`Failed to load data for ${stationName}`);
@@ -129,69 +205,119 @@ export default function StationsPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row">
-      <div className="w-full md:w-1/2 p-4">
-        {loading && (
-          <div className="flex justify-center items-center my-4">
-            <Loader className="animate-spin" />
-          </div>
-        )}
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="w-full lg:w-1/2">
+          {loading && (
+            <div className="flex justify-center items-center my-4">
+              <Loader className="animate-spin" />
+            </div>
+          )}
 
-        {error && <div className="text-red-500">{error}</div>}
+          {error && <div className="text-red-500">{error}</div>}
 
-        {!loading && selectedStation && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">{selectedStation}</h2>
-            {stationLoading ? (
-              <div className="flex justify-center items-center my-4">
-                <Loader className="animate-spin" />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {stationsData[selectedStation] && Array.isArray(stationsData[selectedStation]) && stationsData[selectedStation].map((value, index) => (
-                  <Card key={index} className={`${getTailwindBackgroundColor(value.descriptor)}`}>
-                    <CardHeader>
-                      <CardTitle>{value.parametro}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div>
-                        Valor: {value.valor}
-                      </div>
-                      <div>
-                        Descriptor: {value.descriptor}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+          {!loading && (
+            <div>
+              <h2 className="text-2xl font-bold mb-4">{selectedStation}</h2>
+              {stationLoading ? (
+                <div className="flex justify-center items-center my-4">
+                  <Loader className="animate-spin" />
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                    {stationsData[selectedStation] && Array.isArray(stationsData[selectedStation]) && stationsData[selectedStation].map((value, index) => (
+                      <Card key={index} className={`${getTailwindBackgroundColor(value.descriptor)} p-2`}>
+                        <CardHeader className="p-2">
+                          <CardTitle className="text-sm">{value.parametro}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-2">
+                          <div className="text-xs">
+                            Valor: {value.valor}
+                          </div>
+                          <div className="text-xs">
+                            Descriptor: {value.descriptor}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  {selectedAirQuality && airQualityInfo[selectedAirQuality] && (
+                    <Card className="mt-4" style={{ backgroundColor: airQualityInfo[selectedAirQuality].color }}>
+                      <CardHeader className="p-3">
+                        <CardTitle className="text-lg">Información de Calidad del Aire</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-3 pt-0">
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <p><strong>Valor IMECA:</strong> {airQualityInfo[selectedAirQuality].imeca}</p>
+                            <p><strong>Riesgos a la salud:</strong> {airQualityInfo[selectedAirQuality].risks}</p>
+                          </div>
+                          <div>
+                            <p><strong>Recomendaciones:</strong></p>
+                            <ul className="list-disc pl-4 text-xs">
+                              {airQualityInfo[selectedAirQuality].recommendations.map((rec, index) => (
+                                <li key={index}>{rec}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="w-full lg:w-1/2">
+          <MapContainer center={[25.67602, -100.335847] as LatLngExpression} zoom={10} style={{ height: "600px", width: "100%", borderRadius: 10 }}>
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+            {coordinates.map((station, index) => {
+              const stationData = stationsData[station.name];
+              const worstAirQuality = getWorstAirQuality(stationData);
+              const pinColor = getBackgroundColor(worstAirQuality.descriptor);
+
+              return (
+                <Marker
+                  key={index}
+                  position={[station.lat, station.lon] as LatLngExpression}
+                  icon={createCustomIcon(pinColor)}
+                  eventHandlers={{
+                    click: () => handleStationClick(station.name),
+                  }}
+                />
+              );
+            })}
+          </MapContainer>
+        </div>
       </div>
-
-      <div className="w-full md:w-1/2 p-4">
-        <MapContainer center={[25.67602, -100.335847] as LatLngExpression} zoom={10} style={{ height: "600px", width: "100%", borderRadius: 10 }}>
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
-          {coordinates.map((station, index) => {
-            const stationData = stationsData[station.name];
-            const worstAirQuality = getWorstAirQuality(stationData);
-            const pinColor = getBackgroundColor(worstAirQuality.descriptor);
-
-            return (
-              <Marker
-                key={index}
-                position={[station.lat, station.lon] as LatLngExpression}
-                icon={createCustomIcon(pinColor)}
-                eventHandlers={{
-                  click: () => handleStationClick(station.name),
-                }}
-              />
-            );
-          })}
-        </MapContainer>
+      
+      <div className="mt-8 mb-10">
+        <Card>
+          <CardContent>
+            <div className="flex justify-center items-center">
+              <div className="relative w-full max-w-[1053px] h-[250px] md:h-[500px]">
+                <Image
+                  src="http://aire.nl.gob.mx/Sima2017phpgoogle/images/IAS_mod_2024_www.png"
+                  alt="SIMA NL Grafica"
+                  layout="fill"
+                  objectFit="contain"
+                  className="mx-auto"
+                />
+              </div>
+            </div>
+            <div className="justify-center items-center">
+              <h3 className="text-xl font-semibold">Notas:</h3>
+              <p className="mt-2">- ND significa que no hay datos disponibles</p>
+              <p>- La información corresponde a datos en tiempo real NO VALIDADA del Índice de Aire y Salud</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

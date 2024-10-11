@@ -46,22 +46,22 @@ export default function Navbar() {
                       <NavigationMenuLink asChild>
                         <a
                           className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                          href="/calidad-del-aire"
+                          href="/informes"
                         >
                           <div className="mb-2 mt-4 text-lg font-medium">
-                            Calidad del Aire
+                            Informes
                           </div>
                           <p className="text-sm leading-tight text-muted-foreground">
-                            Información sobre la calidad del aire en la región.
+                            Ultimos informes de calidad del aire.
                           </p>
                         </a>
                       </NavigationMenuLink>
                     </li>
-                    <ListItem href="/calidad-del-aire/mapa" title="Mapa">
-                      Visualización geográfica de la calidad del aire.
+                    <ListItem href="/normambiental" title="Normativa ambiental">
+                      Información sobre la normativa ambiental.
                     </ListItem>
-                    <ListItem href="/calidad-del-aire/pronostico" title="Pronóstico">
-                      Predicciones sobre la calidad del aire.
+                    <ListItem href="/calidad-del-aire/pronostico" title="Ligas de interes">
+                      Ligas de interés sobre la calidad del aire en el pais y el mundo.
                     </ListItem>
                   </ul>
                 </NavigationMenuContent>
