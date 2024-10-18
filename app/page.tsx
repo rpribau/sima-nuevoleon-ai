@@ -149,10 +149,10 @@ const createCustomIcon = (color: string) =>
   };
   
 
-  const getAirQualityDescriptor = (value: string, parameter: any) => {
-    if (value === "ND") return "No dato";
-    const numValue = Number(value);
-    if (isNaN(numValue)) return "Desconocido";
+  const getAirQualityDescriptor = (value: string, parameter: string): keyof typeof airQualityInfo => {
+      if (value === "ND") return "Bueno"; // Default to "Bueno" for "No dato"
+      const numValue = Number(value);
+      if (isNaN(numValue)) return "Bueno"; // Default to "Bueno" for "Desconocido"
   
     switch (parameter) {
       case 'PM10_12':
@@ -202,7 +202,7 @@ const createCustomIcon = (color: string) =>
     }
   };
   
-  const getWorstAirQuality = (stationData: any[]): keyof typeof airQualityInfo => {
+  const getWorstAirQuality = (stationData: { HrAveData: string; Parameter: string }[]): keyof typeof airQualityInfo => {
     if (!Array.isArray(stationData) || stationData.length === 0) {
       console.warn("Invalid station data:", stationData);
       return "Bueno";
@@ -210,7 +210,7 @@ const createCustomIcon = (color: string) =>
   
     const hierarchy = ["Bueno", "Aceptable", "Malo", "Muy mala", "Extremadamente mala"];
     
-    return stationData.reduce((worst, current) => {
+    return stationData.reduce<keyof typeof airQualityInfo>((worst, current) => {
       const currentDescriptor = getAirQualityDescriptor(current.HrAveData, current.Parameter);
       const worstIndex = hierarchy.indexOf(worst);
       const currentIndex = hierarchy.indexOf(currentDescriptor);
@@ -218,7 +218,7 @@ const createCustomIcon = (color: string) =>
     }, "Bueno");
   };
   
-  const getStationColor = (stationData: any[]) => {
+  const getStationColor = (stationData: { HrAveData: string; Parameter: string }[]) => {
     const worstQuality = getWorstAirQuality(stationData);
     switch (worstQuality) {
       case "Bueno":
@@ -342,7 +342,7 @@ export default function StationsPage() {
                     <div className="text-sm">
                       <strong>Recomendaciones:</strong>
                       <ul className="list-disc list-inside">
-                        {airQualityInfo[getWorstAirQuality(stationsData[selectedStation])].recommendations.map((rec: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined, index: Key | null | undefined) => (
+                        {airQualityInfo[getWorstAirQuality(stationsData[selectedStation])].recommendations.map((rec: string, index: Key) => (
                           <li key={index}>{rec}</li>
                         ))}
                       </ul>
@@ -383,3 +383,5 @@ export default function StationsPage() {
     </div>
   );
 }
+// Remove this function as it is not needed anymore
+
