@@ -6,13 +6,12 @@ import { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Loader } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import Image from "next/image";
 import L from "leaflet";
 
-const API_URL = "https://sima-api-af0ce57d922a.herokuapp.com/api/stations?station=";
+const API_URL = "https://sima-api.simaapi.workers.dev/?station=";
 
 const airQualityInfo = {
-  bueno: {
+  "Bueno": {
     color: "#DCFCE7",
     imeca: "0 - 50",
     risks: "Ninguno",
@@ -22,7 +21,7 @@ const airQualityInfo = {
       "Sin riesgo para grupos sensibles.",
     ],
   },
-  aceptable: {
+  "Aceptable": {
     color: "#FEF9C3",
     imeca: "51 - 100",
     risks: "Posibles molestias en niños, adultos mayores y personas con enfermedades respiratorias o cardiovasculares.",
@@ -32,7 +31,7 @@ const airQualityInfo = {
       "Personas extremadamente sensibles limitar actividades al aire libre.",
     ],
   },
-  malo: {
+  "Malo": {
     color: "#FFEDD5",
     imeca: "101 - 150",
     risks: "Posibles efectos adversos a la salud, especialmente en niños, adultos mayores y personas con enfermedades respiratorias o cardiovasculares.",
@@ -42,7 +41,7 @@ const airQualityInfo = {
       "Grupos sensibles deben permanecer en interiores.",
     ],
   },
-  "muy mala": {
+  "Muy mala": {
     color: "#FF0000",
     imeca: "151 - 200",
     risks: "Efectos adversos a la salud en la población general. Se agravan los síntomas en personas vulnerables.",
@@ -54,7 +53,7 @@ const airQualityInfo = {
       "Acude al médico si presentas síntomas.",
     ],
   },
-  "extremadamente mala": {
+  "Extremadamente mala": {
     color: "#800080",
     imeca: "201 - 500",
     risks: "Efectos graves a la salud en toda la población. Pueden presentarse complicaciones en personas vulnerables.",
@@ -68,51 +67,6 @@ const airQualityInfo = {
   },
 };
 
-const getBackgroundColor = (airQuality: string | undefined) => {
-  if (!airQuality) return "#808080"; // Gray for unknown
-  switch (airQuality.toLowerCase()) {
-    case "bueno":
-      return "#00FF00"; // Green
-    case "aceptable":
-      return "#FFFF00"; // Yellow
-    case "malo":
-      return "#FFA500"; // Orange
-    case "muy mala":
-      return "#FF0000"; // Red
-    case "extremadamente mala":
-      return "#800080"; // Purple
-    default:
-      return "#FFFFFF"; // White
-  }
-};
-
-const getTailwindBackgroundColor = (airQuality: string | undefined) => {
-  if (!airQuality) return "bg-gray-100"; // Default for missing data
-  switch (airQuality.toLowerCase()) {
-    case "bueno":
-      return "bg-green-100";
-    case "aceptable":
-      return "bg-yellow-100";
-    case "malo":
-      return "bg-orange-100";
-    case "muy mala":
-      return "bg-red-100";
-    case "extremadamente mala":
-      return "bg-purple-100";
-    default:
-      return "bg-white";
-  }
-};
-
-const createCustomIcon = (color: string) => {
-  return L.divIcon({
-    className: "custom-icon",
-    html: `<div style="background-color: ${color}; width: 25px; height: 25px; border-radius: 50%; border: 2px solid white;"></div>`,
-    iconSize: [25, 25],
-    iconAnchor: [12, 12],
-  });
-};
-
 const coordinates = [
   { lat: 25.67602, lon: -100.335847, name: "Centro" },
   { lat: 25.66827, lon: -100.24958, name: "Sureste" },
@@ -123,50 +77,244 @@ const coordinates = [
   { lat: 25.80194, lon: -100.343056, name: "Norte" },
   { lat: 25.77722, lon: -100.188055, name: "Noreste2" },
   { lat: 25.64611, lon: -100.095555, name: "Sureste2" },
-  { lat: 25.66528, lon: -100.412778, name: "Suroeste2" },
+  { lat: 25.66528, lon: -100.412778, name: "[SAN Pedro]" },
   { lat: 25.600874, lon: -99.995298, name: "Sureste3" },
   { lat: 25.729787, lon: -100.310028, name: "Norte2" },
   { lat: 25.575383, lon: -100.249371, name: "Sur" },
+  { lat: 25.785, lon: -100.46361112, name: "Noroeste3" },
+  { lat: 25.7905833, lon: -100.078411, name: "Pesqueria" },
 ];
 
+const createCustomIcon = (color) =>
+  L.divIcon({
+    className: "custom-icon",
+    html: `<div style="background-color: ${color}; width: 25px; height: 25px; border-radius: 50%; border: 2px solid white;"></div>`,
+    iconSize: [25, 25],
+    iconAnchor: [12, 12],
+  });
+
+  const getBackgroundColor = (value, parameter) => {
+    if (value === "ND") return "#D9D9D9"; // Gris para "No Disponible"
+    if (typeof value !== "number") return "#FFFFFF"; // Blanco por defecto
+  
+    const numValue = Number(value);
+    if (isNaN(numValue)) return "#FFFFFF"; // Blanco si no es un número válido
+  
+    switch (parameter) {
+      case 'PM10_12':
+        if (numValue < 51) return "#DCFCE7"; // Verde
+        if (numValue < 76) return "#FEF9C3"; // Amarillo
+        if (numValue < 156) return "#FFEDD5"; // Naranja
+        if (numValue < 236) return "#FF0000"; // Rojo
+        return "#800080"; // Púrpura
+      case 'PM25_12':
+        if (numValue < 26) return "#DCFCE7";
+        if (numValue < 46) return "#FEF9C3";
+        if (numValue < 80) return "#FFEDD5";
+        if (numValue < 148) return "#FF0000";
+        return "#800080";
+      case 'O3m':
+        if (numValue < 52) return "#DCFCE7";
+        if (numValue < 96) return "#FEF9C3";
+        if (numValue < 136) return "#FFEDD5";
+        if (numValue < 176) return "#FF0000";
+        return "#800080";
+      case 'NO2m':
+        if (numValue < 108) return "#DCFCE7";
+        if (numValue < 211) return "#FEF9C3";
+        if (numValue < 231) return "#FFEDD5";
+        if (numValue < 251) return "#FF0000";
+        return "#800080";
+      case 'O38m':
+        if (numValue < 52) return "#DCFCE7";
+        if (numValue < 71) return "#FEF9C3";
+        if (numValue < 93) return "#FFEDD5";
+        if (numValue < 115) return "#FF0000";
+        return "#800080";
+      case 'SO2m':
+        if (numValue < 9) return "#DCFCE7";
+        if (numValue < 111) return "#FEF9C3";
+        if (numValue < 166) return "#FFEDD5";
+        if (numValue < 221) return "#FF0000";
+        return "#800080";
+      case 'CO8m':
+        if (numValue < 8.751) return "#DCFCE7";
+        if (numValue < 11.001) return "#FEF9C3";
+        if (numValue < 13.301) return "#FFEDD5";
+        if (numValue < 15.501) return "#FF0000";
+        return "#800080";
+      default:
+        return "#FFFFFF"; // Blanco por defecto si no coincide con ningún parámetro
+    }
+  };
+  
+  const getBackgroundColorMap = (value, parameter) => {
+    if (value === "ND") return "#808080"; // Gris para "No Disponible"
+    if (typeof value !== "number") return "#FFFFFF"; // Blanco por defecto
+  
+    const numValue = Number(value);
+    if (isNaN(numValue)) return "#FFFFFF"; // Blanco si no es un número válido
+  
+    switch (parameter) {
+      case 'PM10_12':
+        if (numValue < 51) return "#00FF00"; // Verde
+        if (numValue < 76) return "#FFFF00"; // Amarillo
+        if (numValue < 156) return "#FFA500"; // Naranja
+        if (numValue < 236) return "#FF0000"; // Rojo
+        return "#800080"; // Púrpura
+      case 'PM25_12':
+        if (numValue < 26) return "#00FF00";
+        if (numValue < 46) return "#FFFF00";
+        if (numValue < 80) return "#FFA500";
+        if (numValue < 148) return "#FF0000";
+        return "#800080";
+      case 'O3m':
+        if (numValue < 52) return "#00FF00";
+        if (numValue < 96) return "#FFFF00";
+        if (numValue < 136) return "#FFA500";
+        if (numValue < 176) return "#FF0000";
+        return "#800080";
+      case 'NO2m':
+        if (numValue < 108) return "#00FF00";
+        if (numValue < 211) return "#FFFF00";
+        if (numValue < 231) return "#FFA500";
+        if (numValue < 251) return "#FF0000";
+        return "#800080";
+      case 'O38m':
+        if (numValue < 52) return "#00FF00";
+        if (numValue < 71) return "#FFFF00";
+        if (numValue < 93) return "#FFA500";
+        if (numValue < 115) return "#FF0000";
+        return "#800080";
+      case 'SO2m':
+        if (numValue < 9) return "#00FF00";
+        if (numValue < 111) return "#FFFF00";
+        if (numValue < 166) return "#FFA500";
+        if (numValue < 221) return "#FF0000";
+        return "#800080";
+      case 'CO8m':
+        if (numValue < 8.751) return "#00FF00";
+        if (numValue < 11.001) return "#FFFF00";
+        if (numValue < 13.301) return "#FFA500";
+        if (numValue < 15.501) return "#FF0000";
+        return "#800080";
+      default:
+        return "#FFFFFF"; // Blanco por defecto si no coincide con ningún parámetro
+    }
+  };
+
+  const getAirQualityDescriptor = (value, parameter) => {
+    if (value === "ND") return "No dato";
+    const numValue = Number(value);
+    if (isNaN(numValue)) return "Desconocido";
+  
+    switch (parameter) {
+      case 'PM10_12':
+        if (numValue < 51) return "Bueno";
+        if (numValue < 76) return "Aceptable";
+        if (numValue < 156) return "Malo";
+        if (numValue < 236) return "Muy mala";
+        return "Extremadamente mala";
+      case 'PM25_12':
+        if (numValue < 26) return "Bueno";
+        if (numValue < 46) return "Aceptable";
+        if (numValue < 80) return "Malo";
+        if (numValue < 148) return "Muy mala";
+        return "Extremadamente mala";
+      case 'O3m':
+        if (numValue < 52) return "Bueno";
+        if (numValue < 96) return "Aceptable";
+        if (numValue < 136) return "Malo";
+        if (numValue < 176) return "Muy mala";
+        return "Extremadamente mala";
+      case 'NO2m':
+        if (numValue < 108) return "Bueno";
+        if (numValue < 211) return "Aceptable";
+        if (numValue < 231) return "Malo";
+        if (numValue < 251) return "Muy mala";
+        return "Extremadamente mala";
+      case 'O38m':
+        if (numValue < 52) return "Bueno";
+        if (numValue < 71) return "Aceptable";
+        if (numValue < 93) return "Malo";
+        if (numValue < 115) return "Muy mala";
+        return "Extremadamente mala";
+      case 'SO2m':
+        if (numValue < 9) return "Bueno";
+        if (numValue < 111) return "Aceptable";
+        if (numValue < 166) return "Malo";
+        if (numValue < 221) return "Muy mala";
+        return "Extremadamente mala";
+      case 'CO8m':
+        if (numValue < 8.751) return "Bueno";
+        if (numValue < 11.001) return "Aceptable";
+        if (numValue < 13.301) return "Malo";
+        if (numValue < 15.501) return "Muy mala";
+        return "Extremadamente mala";
+      default:
+        return "Desconocido";
+    }
+  };
+  
+  const getWorstAirQuality = (stationData) => {
+    if (!Array.isArray(stationData) || stationData.length === 0) {
+      console.warn("Invalid station data:", stationData);
+      return "Desconocido";
+    }
+  
+    const hierarchy = ["Bueno", "Aceptable", "Malo", "Muy mala", "Extremadamente mala"];
+    
+    return stationData.reduce((worst, current) => {
+      const currentDescriptor = getAirQualityDescriptor(current.HrAveData, current.Parameter);
+      const worstIndex = hierarchy.indexOf(worst);
+      const currentIndex = hierarchy.indexOf(currentDescriptor);
+      return currentIndex > worstIndex ? currentDescriptor : worst;
+    }, "Bueno");
+  };
+  
+  const getStationColor = (stationData) => {
+    const worstQuality = getWorstAirQuality(stationData);
+    switch (worstQuality) {
+      case "Bueno":
+        return "#00FF00"; // Verde
+      case "Aceptable":
+        return "#FFFF00"; // Amarillo
+      case "Malo":
+        return "#FFA500"; // Naranja
+      case "Muy mala":
+        return "#FF0000"; // Rojo
+      case "Extremadamente mala":
+        return "#800080"; // Púrpura
+      default:
+        return "#808080"; // Gris para desconocido o no disponible
+    }
+  };
+
 export default function StationsPage() {
-  const [stationsData, setStationsData] = useState<{ [key: string]: any }>({});
-  const [loading, setLoading] = useState<boolean>(true);
-  const [stationLoading, setStationLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedStation, setSelectedStation] = useState<string | null>("Centro");
-  const [selectedAirQuality, setSelectedAirQuality] = useState<string | null>(null);
+  const [stationsData, setStationsData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [stationLoading, setStationLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [selectedStation, setSelectedStation] = useState("Centro");
 
   useEffect(() => {
     const fetchAllStationsData = async () => {
       setLoading(true);
       setError(null);
+
       try {
         const allData = await Promise.all(
           coordinates.map(async (station) => {
-            try {
-              const res = await fetch(`${API_URL}${station.name.toUpperCase()}`);
-              if (!res.ok) {
-                throw new Error(`Failed to fetch data for ${station.name}: ${res.statusText}`);
-              }
-              const data = await res.json();
-              return { [station.name]: data.data };
-            } catch (err) {
-              console.error(`Error fetching data for ${station.name}:`, err);
-              return { [station.name]: null };
-            }
+            const res = await fetch(`${API_URL}${station.name.toUpperCase()}`);
+            if (!res.ok) throw new Error(`Failed to fetch ${station.name}`);
+            const data = await res.json();
+            return { [station.name]: data };
           })
         );
-        const combinedData = Object.assign({}, ...allData);
-        setStationsData(combinedData);
-
-        const centroData = combinedData["Centro"];
-        if (centroData) {
-          const worstAirQuality = getWorstAirQuality({ data: centroData });
-          setSelectedAirQuality(worstAirQuality.descriptor.toLowerCase());
-        }
+        setStationsData(Object.assign({}, ...allData));
       } catch (err) {
-        setError("An error occurred while fetching station data");
+        console.error(err);
+        setError("Error fetching station data");
       } finally {
         setLoading(false);
       }
@@ -175,117 +323,106 @@ export default function StationsPage() {
     fetchAllStationsData();
   }, []);
 
-  const handleStationClick = async (stationName: string) => {
+  const handleStationClick = async (stationName) => {
     setSelectedStation(stationName);
     setStationLoading(true);
+
     try {
       const res = await fetch(`${API_URL}${stationName.toUpperCase()}`);
-      if (!res.ok) {
-        throw new Error(`Failed to fetch data for ${stationName}: ${res.statusText}`);
-      }
+      if (!res.ok) throw new Error(`Failed to fetch ${stationName}`);
       const data = await res.json();
-      setStationsData((prevData) => ({
-        ...prevData,
-        [stationName]: data.data,
-      }));
-
-      const worstAirQuality = getWorstAirQuality(data);
-      setSelectedAirQuality(worstAirQuality.descriptor.toLowerCase());
+      setStationsData((prev) => ({ ...prev, [stationName]: data }));
     } catch (err) {
-      console.error(`Error fetching data for ${stationName}:`, err);
-      setError(`Failed to load data for ${stationName}`);
+      console.error(err);
+      setError(`Failed to load ${stationName}`);
     } finally {
       setStationLoading(false);
     }
-  };
-
-  const getWorstAirQuality = (stationResponse: any) => {
-    const stationData = stationResponse?.data;
-    if (!Array.isArray(stationData) || stationData.length === 0) {
-      console.warn("Invalid station data:", stationResponse);
-      return { descriptor: "unknown" };
-    }
-
-    const hierarchy = ["bueno", "aceptable", "malo", "muy mala", "extremadamente mala"];
-
-    return stationData.reduce((worst, current) => {
-      const worstIndex = hierarchy.indexOf(worst.descriptor.toLowerCase());
-      const currentIndex = hierarchy.indexOf(current.descriptor.toLowerCase());
-      return currentIndex > worstIndex ? current : worst;
-    }, { descriptor: "bueno" });
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="w-full lg:w-1/2">
-          {loading && (
+          {loading ? (
             <div className="flex justify-center items-center my-4">
               <Loader className="animate-spin" />
             </div>
-          )}
-          {error && <div className="text-red-500">{error}</div>}
-          {!loading && (
-            <div>
+          ) : (
+            <>
               <h2 className="text-2xl font-bold mb-4">{selectedStation}</h2>
-              {stationLoading ? (
-                <div className="flex justify-center items-center my-4">
-                  <Loader className="animate-spin" />
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-                    {stationsData[selectedStation]?.map((value: any, index: number) => (
-                      <Card key={index} className={`${getTailwindBackgroundColor(value.descriptor)} p-2`}>
-                        <CardHeader className="p-2">
-                          <CardTitle className="text-sm">{value.parametro}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-2">
-                          <div className="text-xs">Valor: {value.valor}</div>
-                          <div className="text-xs">Descriptor: {value.descriptor}</div>
-                        </CardContent>
-                      </Card>
-                    ))}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {stationLoading ? (
+                  <div className="flex justify-center items-center my-4">
+                    <Loader className="animate-spin" />
                   </div>
-                  {selectedAirQuality && (
-                    <Card className={`${getTailwindBackgroundColor(selectedAirQuality)} p-4`}>
+                ) : (
+                  stationsData[selectedStation]?.map((param, index) => (
+                    <Card
+                      key={index}
+                      className="p-2"
+                      style={{ backgroundColor: getBackgroundColor(param.HrAveData, param.Parameter) }}
+                    >
                       <CardHeader className="p-2">
-                        <CardTitle className="text-lg font-bold">Información de Calidad del Aire</CardTitle>
+                        <CardTitle className="text-sm">{param.ParameterLargo}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-2">
-                        <div className="text-sm">
-                          <strong>IMECAs:</strong> {airQualityInfo[selectedAirQuality].imeca}
-                        </div>
-                        <div className="text-sm">
-                          <strong>Riesgos:</strong> {airQualityInfo[selectedAirQuality].risks}
-                        </div>
-                        <div className="text-sm mt-2">
-                          <strong>Recomendaciones:</strong>
-                          <ul className="list-disc list-inside">
-                            {airQualityInfo[selectedAirQuality].recommendations.map((rec, index) => (
-                              <li key={index}>{rec}</li>
-                            ))}
-                          </ul>
-                        </div>
+                        <div className="text-xs">Valor: {param.HrAveData}</div>
+                        <div className="text-xs">Fecha: {param.Date}</div>
                       </CardContent>
                     </Card>
-                  )}
-                </>
+
+
+                  ))
+                )}
+              </div>
+              {!stationLoading && (
+                <Card
+                  className="p-4 mt-4"
+                  style={{
+                    backgroundColor: getBackgroundColor(
+                      getWorstAirQuality(stationsData[selectedStation]),
+                      "PM10_12"
+                    ),
+                  }}
+                >
+                  <CardHeader className="p-2">
+                    <CardTitle className="text-lg">
+                      Calidad del Aire: {getWorstAirQuality(stationsData[selectedStation])}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-2">
+                    <div className="text-sm">
+                      <strong>Riesgos:</strong> {airQualityInfo[getWorstAirQuality(stationsData[selectedStation])].risks}
+                    </div>
+                    <div className="text-sm">
+                      <strong>Recomendaciones:</strong>
+                      <ul className="list-disc list-inside">
+                        {airQualityInfo[getWorstAirQuality(stationsData[selectedStation])].recommendations.map((rec, index) => (
+                          <li key={index}>{rec}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
-            </div>
+            </>
           )}
         </div>
 
         <div className="w-full lg:w-1/2">
-          <MapContainer center={[25.67602, -100.335847]} zoom={10} style={{ height: "655px", width: "100%", borderRadius: 10 }}>
+        <MapContainer
+            center={[25.67602, -100.335847]}
+            zoom={10}
+            style={{ height: "655px", width: "100%", borderRadius: 10 }}
+          >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
             {coordinates.map((station, index) => {
               const stationData = stationsData[station.name];
-              const worstAirQuality = getWorstAirQuality({ data: stationData });
-              const pinColor = getBackgroundColor(worstAirQuality.descriptor);
+              const pinColor = getStationColor(stationData);
 
               return (
                 <Marker
