@@ -174,7 +174,7 @@ interface MobileLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> 
 }
 
 function MobileLink({
-  href,
+  href = "/",
   onOpenChange,
   className,
   children,
