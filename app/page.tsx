@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useEffect, SetStateAction, Key } from "react";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Loader } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import L from "leaflet";
+
+import dynamic from "next/dynamic";
+import MapComponent from "@/components/MapComponent";
+const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
+const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false });
+
 
 const API_URL = "https://sima-api.simaapi.workers.dev/?station=";
 
@@ -85,13 +91,6 @@ const coordinates = [
   { lat: 25.7905833, lon: -100.078411, name: "Pesqueria" },
 ];
 
-const createCustomIcon = (color: string) =>
-  L.divIcon({
-    className: "custom-icon",
-    html: `<div style="background-color: ${color}; width: 25px; height: 25px; border-radius: 50%; border: 2px solid white;"></div>`,
-    iconSize: [25, 25],
-    iconAnchor: [12, 12],
-  });
 
   const getBackgroundColor = (value: string, parameter: string) => {
     if (value === "ND") return "#D9D9D9"; // Gris para "No Disponible"
@@ -207,34 +206,20 @@ const createCustomIcon = (color: string) =>
       console.warn("Invalid station data:", stationData);
       return "Bueno";
     }
+
+    let worstQuality: keyof typeof airQualityInfo = "Bueno";
+
+    stationData.forEach((data) => {
+      const descriptor = getAirQualityDescriptor(data.HrAveData, data.Parameter);
+      if (airQualityInfo[descriptor].imeca.split(" - ")[1] > airQualityInfo[worstQuality].imeca.split(" - ")[1]) {
+        worstQuality = descriptor;
+      }
+    });
+
+    return worstQuality;
+  }
+
   
-    const hierarchy = ["Bueno", "Aceptable", "Malo", "Muy mala", "Extremadamente mala"];
-    
-    return stationData.reduce<keyof typeof airQualityInfo>((worst, current) => {
-      const currentDescriptor = getAirQualityDescriptor(current.HrAveData, current.Parameter);
-      const worstIndex = hierarchy.indexOf(worst);
-      const currentIndex = hierarchy.indexOf(currentDescriptor);
-      return currentIndex > worstIndex ? currentDescriptor : worst;
-    }, "Bueno");
-  };
-  
-  const getStationColor = (stationData: { HrAveData: string; Parameter: string }[]) => {
-    const worstQuality = getWorstAirQuality(stationData);
-    switch (worstQuality) {
-      case "Bueno":
-        return "#00FF00"; // Verde
-      case "Aceptable":
-        return "#FFFF00"; // Amarillo
-      case "Malo":
-        return "#FFA500"; // Naranja
-      case "Muy mala":
-        return "#FF0000"; // Rojo
-      case "Extremadamente mala":
-        return "#800080"; // Púrpura
-      default:
-        return "#808080"; // Gris para desconocido o no disponible
-    }
-  };
 
 export default function StationsPage() {
   const [stationsData, setStationsData] = useState<{ [key: string]: { HrAveData: string; Parameter: string; ParameterLargo: string; Date: string; }[] }>({});
@@ -355,33 +340,15 @@ export default function StationsPage() {
         </div>
 
         <div className="w-full lg:w-1/2">
-        <MapContainer
-            center={[25.67602, -100.335847]}
-            zoom={10}
-            style={{ height: "655px", width: "100%", borderRadius: 10 }}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
-            {coordinates.map((station, index) => {
-              const stationData = stationsData[station.name];
-              const pinColor = getStationColor(stationData);
-
-              return (
-                <Marker
-                  key={index}
-                  position={[station.lat, station.lon] as LatLngExpression}
-                  icon={createCustomIcon(pinColor)}
-                  eventHandlers={{ click: () => handleStationClick(station.name) }}
-                />
-              );
-            })}
-          </MapContainer>
+        <MapComponent
+            coordinates={coordinates}
+            stationsData={stationsData}
+            onStationClick={handleStationClick}
+          />
         </div>
       </div>
     </div>
   );
 }
-// Remove this function as it is not needed anymore
+
 

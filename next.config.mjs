@@ -12,8 +12,8 @@ const nextConfig = {
   },
   webpack(config) {
     config.module.rules.push({
-      test: /\.svg$/,
-      use: ["@svgr/webpack"]
+      test: /\.(png|jpg|gif)$/i,
+      type: 'asset/resource',
     });
 
     return config;
