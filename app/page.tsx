@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, SetStateAction, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, AwaitedReactNode } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -85,7 +85,7 @@ const coordinates = [
   { lat: 25.7905833, lon: -100.078411, name: "Pesqueria" },
 ];
 
-const createCustomIcon = (color) =>
+const createCustomIcon = (color: string) =>
   L.divIcon({
     className: "custom-icon",
     html: `<div style="background-color: ${color}; width: 25px; height: 25px; border-radius: 50%; border: 2px solid white;"></div>`,
@@ -93,7 +93,7 @@ const createCustomIcon = (color) =>
     iconAnchor: [12, 12],
   });
 
-  const getBackgroundColor = (value, parameter) => {
+  const getBackgroundColor = (value: string, parameter: string) => {
     if (value === "ND") return "#D9D9D9"; // Gris para "No Disponible"
     if (typeof value !== "number") return "#FFFFFF"; // Blanco por defecto
   
@@ -149,7 +149,7 @@ const createCustomIcon = (color) =>
   };
   
 
-  const getAirQualityDescriptor = (value, parameter) => {
+  const getAirQualityDescriptor = (value: string, parameter: any) => {
     if (value === "ND") return "No dato";
     const numValue = Number(value);
     if (isNaN(numValue)) return "Desconocido";
@@ -198,14 +198,14 @@ const createCustomIcon = (color) =>
         if (numValue < 15.501) return "Muy mala";
         return "Extremadamente mala";
       default:
-        return "Desconocido";
+        return "Bueno";
     }
   };
   
-  const getWorstAirQuality = (stationData) => {
+  const getWorstAirQuality = (stationData: any[]): keyof typeof airQualityInfo => {
     if (!Array.isArray(stationData) || stationData.length === 0) {
       console.warn("Invalid station data:", stationData);
-      return "Desconocido";
+      return "Bueno";
     }
   
     const hierarchy = ["Bueno", "Aceptable", "Malo", "Muy mala", "Extremadamente mala"];
@@ -218,7 +218,7 @@ const createCustomIcon = (color) =>
     }, "Bueno");
   };
   
-  const getStationColor = (stationData) => {
+  const getStationColor = (stationData: any[]) => {
     const worstQuality = getWorstAirQuality(stationData);
     switch (worstQuality) {
       case "Bueno":
@@ -237,10 +237,10 @@ const createCustomIcon = (color) =>
   };
 
 export default function StationsPage() {
-  const [stationsData, setStationsData] = useState({});
+  const [stationsData, setStationsData] = useState<{ [key: string]: any[] }>({});
   const [loading, setLoading] = useState(true);
   const [stationLoading, setStationLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [selectedStation, setSelectedStation] = useState("Centro");
 
   useEffect(() => {
@@ -269,15 +269,15 @@ export default function StationsPage() {
     fetchAllStationsData();
   }, []);
 
-  const handleStationClick = async (stationName) => {
+  const handleStationClick = async (stationName: SetStateAction<string>) => {
     setSelectedStation(stationName);
     setStationLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}${stationName.toUpperCase()}`);
+      const res = await fetch(`${API_URL}${(stationName as string).toUpperCase()}`);
       if (!res.ok) throw new Error(`Failed to fetch ${stationName}`);
       const data = await res.json();
-      setStationsData((prev) => ({ ...prev, [stationName]: data }));
+      setStationsData((prev) => ({ ...prev, [stationName as string]: data }));
     } catch (err) {
       console.error(err);
       setError(`Failed to load ${stationName}`);
@@ -303,22 +303,20 @@ export default function StationsPage() {
                     <Loader className="animate-spin" />
                   </div>
                 ) : (
-                  stationsData[selectedStation]?.map((param, index) => (
-                    <Card
-                      key={index}
-                      className="p-2"
-                      style={{ backgroundColor: getBackgroundColor(param.HrAveData, param.Parameter) }}
-                    >
-                      <CardHeader className="p-2">
-                        <CardTitle className="text-sm">{param.ParameterLargo}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-2">
-                        <div className="text-xs">Valor: {param.HrAveData}</div>
-                        <div className="text-xs">Fecha: {param.Date}</div>
-                      </CardContent>
-                    </Card>
-
-
+                  stationsData[selectedStation]?.map((param: { HrAveData: string; Parameter: string; ParameterLargo: string; Date: string; }, index: Key) => (
+                  <Card
+                    key={index}
+                    className="p-2"
+                    style={{ backgroundColor: getBackgroundColor(param.HrAveData, param.Parameter) }}
+                  >
+                    <CardHeader className="p-2">
+                    <CardTitle className="text-sm">{param.ParameterLargo}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-2">
+                    <div className="text-xs">Valor: {param.HrAveData}</div>
+                    <div className="text-xs">Fecha: {param.Date}</div>
+                    </CardContent>
+                  </Card>
                   ))
                 )}
               </div>
@@ -339,12 +337,12 @@ export default function StationsPage() {
                   </CardHeader>
                   <CardContent className="p-2">
                     <div className="text-sm">
-                      <strong>Riesgos:</strong> {airQualityInfo[getWorstAirQuality(stationsData[selectedStation])].risks}
+                      <strong>Riesgos:</strong> {airQualityInfo[getWorstAirQuality(stationsData[selectedStation])]?.risks}
                     </div>
                     <div className="text-sm">
                       <strong>Recomendaciones:</strong>
                       <ul className="list-disc list-inside">
-                        {airQualityInfo[getWorstAirQuality(stationsData[selectedStation])].recommendations.map((rec, index) => (
+                        {airQualityInfo[getWorstAirQuality(stationsData[selectedStation])].recommendations.map((rec: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined, index: Key | null | undefined) => (
                           <li key={index}>{rec}</li>
                         ))}
                       </ul>
