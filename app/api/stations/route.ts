@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const filePath = path.join(dataDirectory, `${stationName.toLowerCase()}.json`);
+    const filePath = path.join(dataDirectory, `${stationName}.json`);
     
     // Check if the file exists
     try {

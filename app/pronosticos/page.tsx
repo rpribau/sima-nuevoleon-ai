@@ -1,14 +1,15 @@
 // app/page.js
 
-export default async function Home() {
-    const response = await fetch('http://aire.nl.gob.mx:81/SIMA2017reportes/pages/Parametros.json?1728427544575');
-    const data = await response.json();
+export default async function Pron() {
   
     return (
-      <div>
-        <h1>Parámetros</h1>
-        <pre>{JSON.stringify(data, null, 2)}</pre>
-      </div>
+      <div style={{ width: '100vw', height: '90vh', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+      <iframe
+        src="https://aire-sima-widgets.streamlit.app/?embed_options=show_toolbar,light_theme&embed=true"
+        style={{ width: '80%', height: '90%', border: 'none' }}
+        title="Iframe de Calidad de Aire"
+      />
+    </div>
     );
   }
   
