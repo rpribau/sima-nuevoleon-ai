@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, SetStateAction, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, AwaitedReactNode } from "react";
+import { useState, useEffect, SetStateAction, Key } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -237,7 +237,7 @@ const createCustomIcon = (color: string) =>
   };
 
 export default function StationsPage() {
-  const [stationsData, setStationsData] = useState<{ [key: string]: any[] }>({});
+  const [stationsData, setStationsData] = useState<{ [key: string]: { HrAveData: string; Parameter: string; ParameterLargo: string; Date: string; }[] }>({});
   const [loading, setLoading] = useState(true);
   const [stationLoading, setStationLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
