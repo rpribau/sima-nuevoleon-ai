@@ -112,18 +112,18 @@ export default function Navbar() {
                     Calidad del Aire
                   </MobileLink>
                   <MobileLink
-                    href="/calidad-del-aire/mapa"
+                    href="/informes"
                     onOpenChange={setIsOpen}
                     className="pl-4"
                   >
-                    Mapa
+                    Informes
                   </MobileLink>
                   <MobileLink
-                    href="/calidad-del-aire/pronostico"
+                    href="/normambiental"
                     onOpenChange={setIsOpen}
                     className="pl-4"
                   >
-                    Pronóstico
+                    Normativa Ambiental
                   </MobileLink>
                 </div>
                 <MobileLink href="/sig" onOpenChange={setIsOpen}>
