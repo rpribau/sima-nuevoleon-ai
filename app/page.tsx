@@ -148,60 +148,6 @@ const createCustomIcon = (color) =>
     }
   };
   
-  const getBackgroundColorMap = (value, parameter) => {
-    if (value === "ND") return "#808080"; // Gris para "No Disponible"
-    if (typeof value !== "number") return "#FFFFFF"; // Blanco por defecto
-  
-    const numValue = Number(value);
-    if (isNaN(numValue)) return "#FFFFFF"; // Blanco si no es un número válido
-  
-    switch (parameter) {
-      case 'PM10_12':
-        if (numValue < 51) return "#00FF00"; // Verde
-        if (numValue < 76) return "#FFFF00"; // Amarillo
-        if (numValue < 156) return "#FFA500"; // Naranja
-        if (numValue < 236) return "#FF0000"; // Rojo
-        return "#800080"; // Púrpura
-      case 'PM25_12':
-        if (numValue < 26) return "#00FF00";
-        if (numValue < 46) return "#FFFF00";
-        if (numValue < 80) return "#FFA500";
-        if (numValue < 148) return "#FF0000";
-        return "#800080";
-      case 'O3m':
-        if (numValue < 52) return "#00FF00";
-        if (numValue < 96) return "#FFFF00";
-        if (numValue < 136) return "#FFA500";
-        if (numValue < 176) return "#FF0000";
-        return "#800080";
-      case 'NO2m':
-        if (numValue < 108) return "#00FF00";
-        if (numValue < 211) return "#FFFF00";
-        if (numValue < 231) return "#FFA500";
-        if (numValue < 251) return "#FF0000";
-        return "#800080";
-      case 'O38m':
-        if (numValue < 52) return "#00FF00";
-        if (numValue < 71) return "#FFFF00";
-        if (numValue < 93) return "#FFA500";
-        if (numValue < 115) return "#FF0000";
-        return "#800080";
-      case 'SO2m':
-        if (numValue < 9) return "#00FF00";
-        if (numValue < 111) return "#FFFF00";
-        if (numValue < 166) return "#FFA500";
-        if (numValue < 221) return "#FF0000";
-        return "#800080";
-      case 'CO8m':
-        if (numValue < 8.751) return "#00FF00";
-        if (numValue < 11.001) return "#FFFF00";
-        if (numValue < 13.301) return "#FFA500";
-        if (numValue < 15.501) return "#FF0000";
-        return "#800080";
-      default:
-        return "#FFFFFF"; // Blanco por defecto si no coincide con ningún parámetro
-    }
-  };
 
   const getAirQualityDescriptor = (value, parameter) => {
     if (value === "ND") return "No dato";
