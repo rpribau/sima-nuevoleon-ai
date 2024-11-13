@@ -25,10 +25,9 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
         <div className="mr-4 hidden md:flex">
-          <Link href="/" className="mr-6 flex items-center space-x-2 ml-10">
-            <Image src="https://svgshare.com/i/1BGP.svg" alt="SIMA NL Logo" width={84} height={44} />
-            
-          </Link>
+            <Link href="/" className="mr-6 flex items-center space-x-2 ml-10">
+            <Image src="/favicon.ico" alt="SIMA NL Logo" width={32} height={32} />
+            </Link>
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
