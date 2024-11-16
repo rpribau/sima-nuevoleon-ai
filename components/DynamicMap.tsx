@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L, { LatLngExpression } from "leaflet";
@@ -113,25 +113,21 @@ const getStationColor = (stationData: { HrAveData: string; Parameter: string }[]
 };
 
 const DynamicMap: React.FC<MapComponentProps> = ({ coordinates, stationsData, onStationClick }) => {
+  const [stationColors, setStationColors] = useState<{ [key: string]: string }>({});
+
   useEffect(() => {
     import("leaflet/dist/leaflet.css");
   }, []);
 
-  const stationMarkers = useMemo(() => {
-    return coordinates.map((station, index) => {
-      const stationData = stationsData[station.name];
-      const pinColor = stationData ? getStationColor(stationData) : "#808080";
-
-      return (
-        <Marker
-          key={index}
-          position={[station.lat, station.lon] as LatLngExpression}
-          icon={createCustomIcon(pinColor)}
-          eventHandlers={{ click: () => onStationClick(station.name) }}
-        />
-      );
+  useEffect(() => {
+    const newColors: { [key: string]: string } = {};
+    coordinates.forEach((station) => {
+      if (stationsData[station.name]) {
+        newColors[station.name] = getStationColor(stationsData[station.name]);
+      }
     });
-  }, [coordinates, stationsData, onStationClick]);
+    setStationColors(newColors);
+  }, [stationsData, coordinates]);
 
   return (
     <MapContainer
@@ -143,7 +139,14 @@ const DynamicMap: React.FC<MapComponentProps> = ({ coordinates, stationsData, on
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
-      {stationMarkers}
+      {coordinates.map((station, index) => (
+        <Marker
+          key={index}
+          position={[station.lat, station.lon] as LatLngExpression}
+          icon={createCustomIcon(stationColors[station.name] || "#808080")}
+          eventHandlers={{ click: () => onStationClick(station.name) }}
+        />
+      ))}
     </MapContainer>
   );
 };
